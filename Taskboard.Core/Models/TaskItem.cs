@@ -16,7 +16,7 @@ namespace Taskboard.Core.Models
         //Priority can be "Low", "Medium", "High"
         public string Priority { get; set; } = "Medium"; 
         public DateTime? DueDate { get; set; }
-        public int? AssignedUserId { get; set; }
+        public int? AssignedUserId { get; set; } // Foreign key to User
         public User? AssignedUser { get; set; }
     }
 }
