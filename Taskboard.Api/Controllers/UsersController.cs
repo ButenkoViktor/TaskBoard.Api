@@ -39,7 +39,6 @@ namespace Taskboard.Api.Controllers
         {
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
-            // 201 Create 
             return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
         }
 

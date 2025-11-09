@@ -42,7 +42,9 @@ namespace Taskboard.Api.Controllers
             return CreatedAtAction(nameof(GetTask), new { id = task.Id }, task);
         }
 
-        // PUT - update task
+        /// <summary>Update an existing task.</summary>
+        /// <param name="id">Task ID</param>
+        /// <param name="task">Updated task object</param>
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTask(int id, TaskItem task)
         {
