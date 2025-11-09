@@ -11,12 +11,17 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="9.0.6" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Taskboard.Core\Taskboard.Core.csproj" />
     <ProjectReference Include="..\Taskboard.Infrastructure\Taskboard.Infrastructure.csproj" />
   </ItemGroup>
-
+	
+	<PropertyGroup>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<NoWarn>$(NoWarn);1591</NoWarn>
+	</PropertyGroup>
 </Project>
