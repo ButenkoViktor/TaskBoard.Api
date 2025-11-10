@@ -3,6 +3,7 @@ using Taskboard.Infrastructure.Data;
 using System.Reflection;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Filters;
+using Taskboard.Api.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,6 +57,9 @@ if (app.Environment.IsDevelopment())
 
     });
 }
+// Minimal API endpoints
+app.MapTaskEndpoints();
+
 app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseAuthorization();
