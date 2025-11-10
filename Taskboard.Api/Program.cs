@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Taskboard.Infrastructure.Data;
 using System.Reflection;
+using Microsoft.Extensions.Options;
+using Swashbuckle.AspNetCore.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,12 +20,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    //options.EnableAnnotations();
-
-    // XML comments
-    //var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    //var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    //options.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
+    options.EnableAnnotations();
+    options.ExampleFilters();
+    //XML comments
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+     options.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
 
     // Swagger doc info
     options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
@@ -38,7 +40,7 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
-
+builder.Services.AddSwaggerExamplesFromAssemblyOf<Program>();
 var app = builder.Build();
 
 // Swagger middleware
@@ -47,10 +49,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
+        c.DocumentTitle = "TaskBoard API Docs";
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "TaskBoard API v1");
+        c.InjectStylesheet("/swagger/custom.css");
+        c.EnableTryItOutByDefault();
+
     });
 }
-
+app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
