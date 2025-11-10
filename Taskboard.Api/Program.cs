@@ -4,6 +4,7 @@ using System.Reflection;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Filters;
 using Taskboard.Api.Endpoints;
+using Taskboard.Api.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -60,8 +61,19 @@ if (app.Environment.IsDevelopment())
 // Minimal API endpoints
 app.MapTaskEndpoints();
 
-app.UseStaticFiles();
+// HTTP -> HTTPS redirection
 app.UseHttpsRedirection();
+
+// wwwroot static files
+app.UseStaticFiles();
+
+// My middleware request logging
+app.UseRequestLogging();
+
+// Routing & Authorization
+app.UseRouting();
 app.UseAuthorization();
+
+// Map controllers
 app.MapControllers();
 app.Run();
