@@ -17,6 +17,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Add services
 builder.Services.AddControllers();
+// Health checks
+builder.Services.AddHealthChecks();
 
 // Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
@@ -42,7 +44,21 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
+
+// Register Swagger examples
 builder.Services.AddSwaggerExamplesFromAssemblyOf<Program>();
+
+// CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 
 // Swagger middleware
@@ -67,11 +83,22 @@ app.UseHttpsRedirection();
 // wwwroot static files
 app.UseStaticFiles();
 
+// Error  middleware
+app.UseErrorHandling();
+
 // My middleware request logging
 app.UseRequestLogging();
 
-// Routing & Authorization
+// Health checks endpoint
+app.MapHealthChecks("/health");
+
+// Routing 
 app.UseRouting();
+
+// CORS
+app.UseCors("AllowAll");
+
+// Authorization
 app.UseAuthorization();
 
 // Map controllers
