@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Taskboard.Infrastructure.Data;
-using Taskboard.Core.Models;
 using Swashbuckle.AspNetCore.Annotations;
 using Swashbuckle.AspNetCore.Filters;
 using Taskboard.Api.Dtos;
+using Taskboard.Core.Models;
+using Taskboard.Core.Services;
 
 namespace Taskboard.Api.Controllers
 {
@@ -12,37 +11,37 @@ namespace Taskboard.Api.Controllers
     [Route("api/[controller]")]
     public class TasksController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly ITaskService _taskService;
+        private readonly ILogger<TasksController> _logger;
 
-        public TasksController(AppDbContext context)
+        public TasksController(ITaskService taskService, ILogger<TasksController> logger)
         {
-            _context = context;
+            _taskService = taskService;
+            _logger = logger;
         }
 
         /// <summary>Get all tasks with their assigned users.</summary>
         [HttpGet]
         [SwaggerOperation(Summary = "Get all tasks", Description = "Returns all tasks with assigned users.")]
-        [SwaggerResponse(200, "Tasks successfully retrieved")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<TaskItem>>> GetTasks()
         {
-            return await _context.TaskItems.Include(t => t.AssignedUser).ToListAsync();
+            var tasks = await _taskService.GetAllAsync();
+            return Ok(tasks);
         }
 
         /// <summary>Get a specific task by ID.</summary>
         [HttpGet("{id}")]
         [SwaggerOperation(Summary = "Get task by ID", Description = "Returns a single task with assigned user.")]
-        [SwaggerResponse(200, "Task found")]
-        [SwaggerResponse(404, "Task not found")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<TaskItem>> GetTask(int id)
         {
-            var task = await _context.TaskItems
-                .Include(t => t.AssignedUser)
-                .FirstOrDefaultAsync(t => t.Id == id);
-
+            var task = await _taskService.GetByIdAsync(id);
             if (task == null)
                 return NotFound();
 
-            return task;
+            return Ok(task);
         }
 
         /// <summary>Create a new task.</summary>
@@ -50,9 +49,9 @@ namespace Taskboard.Api.Controllers
         [SwaggerOperation(Summary = "Create new task", Description = "Creates a new task and saves it to the database.")]
         [SwaggerResponse(201, "Task created successfully")]
         [SwaggerRequestExample(typeof(CreateTaskDto), typeof(CreateTaskDtoExample))]
-        public async Task<ActionResult<TaskItem>> CreateTask(CreateTaskDto dto)
+        public async Task<ActionResult<TaskItem>> CreateTask([FromBody] CreateTaskDto dto)
         {
-            var task = new TaskItem
+            var newTask = new TaskItem
             {
                 Title = dto.Title,
                 Description = dto.Description,
@@ -60,26 +59,10 @@ namespace Taskboard.Api.Controllers
                 DueDate = dto.DueDate
             };
 
-            _context.TaskItems.Add(task);
-            await _context.SaveChangesAsync();
+            var created = await _taskService.CreateAsync(newTask);
+            _logger.LogInformation("Task '{Title}' created successfully.", created.Title);
 
-            return CreatedAtAction(nameof(GetTask), new { id = task.Id }, task);
-        }
-
-        /// <summary>Update an existing task.</summary>
-        [HttpPut("{id}")]
-        [SwaggerOperation(Summary = "Update a task")]
-        [SwaggerResponse(204, "Task updated")]
-        [SwaggerResponse(400, "ID mismatch")]
-        public async Task<IActionResult> UpdateTask(int id, TaskItem task)
-        {
-            if (id != task.Id)
-                return BadRequest();
-
-            _context.Entry(task).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            return CreatedAtAction(nameof(GetTask), new { id = created.Id }, created);
         }
 
         /// <summary>Delete a task by ID.</summary>
@@ -89,13 +72,11 @@ namespace Taskboard.Api.Controllers
         [SwaggerResponse(404, "Task not found")]
         public async Task<IActionResult> DeleteTask(int id)
         {
-            var task = await _context.TaskItems.FindAsync(id);
-            if (task == null)
+            var deleted = await _taskService.DeleteAsync(id);
+            if (!deleted)
                 return NotFound();
 
-            _context.TaskItems.Remove(task);
-            await _context.SaveChangesAsync();
-
+            _logger.LogWarning("Task with ID {Id} deleted.", id);
             return NoContent();
         }
     }

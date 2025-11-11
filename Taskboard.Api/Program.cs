@@ -5,6 +5,8 @@ using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Filters;
 using Taskboard.Api.Endpoints;
 using Taskboard.Api.Middlewares;
+using Taskboard.Core.Services;
+using Taskboard.Infrastructure.ServicesInfrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +17,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         b => b.MigrationsAssembly("Taskboard.Infrastructure")
     ));
 
+// Dependency Injection for TaskService
+builder.Services.AddScoped<ITaskService, TaskService>();
 // Add services
 builder.Services.AddControllers();
 // Health checks
